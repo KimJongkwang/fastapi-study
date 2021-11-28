@@ -9,3 +9,4 @@
     - --reload: 코드 변경시 자동 저장 및 시작
     - --host: 호스트주소
     - --port: 포트
+> [FastAPI 기본과정, 유튜브 BIPA SORI님](https://www.youtube.com/watch?v=7frN5JPMsQU)

@@ -1,25 +1,20 @@
+from datetime import datetime
 from fastapi import FastAPI
 from pydantic.main import BaseModel
-
-class HelloWorldRequest(BaseModel):
-    name: str
-    age: int
-
+from typing import Optional
 
 app = FastAPI()
 
-@app.get("/")
-async def root():
-    return {"Hello": "World"}
+class NowTime(BaseModel):
+    nowtime: Optional[str] = None
 
-@app.get("/hello/{name}")
-async def hello_with_name(name: str):
-    return "Hello with name. your name is " + name
+@app.post("/nowTime")
+async def return_now_time(request: NowTime):
+    return {"nowtime": request.nowtime}
 
-@app.get("/hello2/query")
-async def hello_with_querystring(name: str):
-    return "Hello with name. your name is " + name
-
-@app.post("/hello3/post")
-async def hello_post(request: HelloWorldRequest):
-    return "hello with post. your name: {}, your age: {}".format(request.name, request.age)
+@app.get("/nowTime/date")
+async def return_now_time(time: str):
+    return {
+        'keyword': time,
+        'nowtime': datetime.now().strftime('%Y-%m-%d %H:%M'),
+        }

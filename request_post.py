@@ -15,11 +15,10 @@ def test_get(url2):
 
 if __name__=="__main__":
     url = "http://localhost:8000/nowTime"
-    url2 = "http://localhost:8000/nowTime"
 
     cnt = 0
     while cnt < 10:
         test_post(url)
-        test_get(url2)
+        test_get(url)
         cnt += 1
         time.sleep(10)

@@ -1,0 +1,4 @@
+flake8
+black
+fastapi~=0.70.1
+uvicorn~=0.16.0

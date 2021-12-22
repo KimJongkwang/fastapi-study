@@ -3,11 +3,8 @@
   "python.linting.flake8Enabled": true,
   "python.linting.enabled": true,
   "python.linting.flake8Args": [
-
     "--max-line-length=100",
-
-    "--ignore=E501",
-
+    "--ignore=E501"
   ],
 
   // formatter

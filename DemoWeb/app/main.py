@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from app.models import mongodb
 from app.models.book import BookModel
+from app.book_scraper import NaverBookScraper
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -16,7 +17,8 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
     book = BookModel(keyword="파이썬", publisher="BJPublic", price=1200, image="me.png")
-    print(await mongodb.engine.save(book))  # save 함수가 async 함수임 그렇기때문에 await 필요
+    # save 함수가 async 함수임 그렇기때문에 await 필요
+    print(await mongodb.engine.save(book))
     return templates.TemplateResponse(
         "./index.html", {"request": request, "title": "콜렉터 북북이"}
     )
@@ -24,9 +26,10 @@ async def root(request: Request):
 
 @app.get("/search", response_class=HTMLResponse)
 async def search(request: Request, q: str):
-    print(q)
+    scraper = NaverBookScraper()
+    data = await scraper.search(q, 5)
     return templates.TemplateResponse(
-        "./index.html", {"request": request, "keyword": q}
+        "./index.html", {"request": request, "keyword": q, "data": data}
     )
 
 

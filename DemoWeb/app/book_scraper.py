@@ -5,7 +5,7 @@ from app.config import get_secret
 
 class NaverBookScraper:
 
-    URL = "https://openapi.naver.com/v1/search/image"
+    URL = "https://openapi.naver.com/v1/search/book"
     HEADERS = {
         "X-Naver-Client-Id": get_secret("NAVER_API_ID"),
         "X-Naver-Client-Secret": get_secret("NAVER_API_SECRET"),
@@ -17,6 +17,19 @@ class NaverBookScraper:
             if response.status == 200:
                 result = await response.json()
                 return result["items"]
+
+    # @classmethod
+    # async def fetch(cls, session, url):
+    #     async with session.get(url, headers=cls.HEADERS) as response:
+    #         if response.status == 200:
+    #             result = await response.json()
+    #             return result["items"]
+
+    # async def fetch(self, session, url):
+    #     async with session.get(url, headers=self.HEADERS) as response:
+    #         if response.status == 200:
+    #             result = await response.json()
+    #             return result["items"]
 
     def unit_url(self, keyword, start):
         return f"{self.URL}?query={keyword}&display=10&start={start}"
@@ -32,7 +45,6 @@ class NaverBookScraper:
                 if data is not None:
                     for book in data:
                         result.append(book)
-            # print(result)
         return result
 
     def run(self, keyword, total_page):

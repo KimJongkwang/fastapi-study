@@ -16,20 +16,62 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    book = BookModel(keyword="파이썬", publisher="BJPublic", price=1200, image="me.png")
+    # book = BookModel(keyword="파이썬", publisher="BJPublic", price=1200, image="me.png")
     # save 함수가 async 함수임 그렇기때문에 await 필요
-    print(await mongodb.engine.save(book))
+    # print(await mongodb.engine.save(book))
     return templates.TemplateResponse(
-        "./index.html", {"request": request, "title": "콜렉터 북북이"}
+        "./index.html", {"request": request, "title": "콜렉터스 북북이"}
     )
 
 
 @app.get("/search", response_class=HTMLResponse)
 async def search(request: Request, q: str):
+    # 1. 쿼리에서 검색어 추출
+    keyword = q
+    # (예외처리)
+    # - 검색어가 없다면 사용자에게 검색을 요구 return
+    if not keyword:
+        return templates.TemplateResponse(
+            "./index.html", {"request": request, "title": "콜렉터스 북북이"}
+        )
+    # - 해당 검색어에 대한 수집된 데이터가 이미 DB에 존재한다면
+    #   해당 데이터를 DB에서 조회하여 사용자에게 return
+
+    if await mongodb.engine.find_one(BookModel, BookModel.keyword == keyword):
+        books = await mongodb.engine.find(BookModel, BookModel.keyword == keyword)
+        return templates.TemplateResponse(
+            "./index.html",
+            {
+                "request": request,
+                "title": "콜렉터스 북북이",
+                "books": books,
+            },
+        )
+    # 2. 데이터 수집기를 해당 검색어에 대해 데이터를 수집한다.
     scraper = NaverBookScraper()
-    data = await scraper.search(q, 5)
+    books = await scraper.search(keyword, 5)
+
+    # 3. DB에 수집한 데이터를 저장한다.
+    book_models = [
+        BookModel(
+            keyword=keyword,
+            publisher=book["publisher"],
+            price=book["price"],
+            image=book["image"],
+        )
+        for book in books
+    ]
+
+    # mongoDB.engine.saveall(models) asyncio.gather()로 save
+    await mongodb.engine.save_all(book_models)
+    print(f"Save All! {keyword}")
     return templates.TemplateResponse(
-        "./index.html", {"request": request, "keyword": q, "data": data}
+        "./index.html",
+        {
+            "request": request,
+            "title": "콜렉터스 북북이",
+            "books": books,
+        },
     )
 
 

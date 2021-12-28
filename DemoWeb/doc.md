@@ -9,3 +9,5 @@
 
 - odmantic은 ODM(Object-Document Mapper) pydantic을 통해 정의한 모델을 nosql을 객체로 처리할 수 있도록 도와줌
 - odmantic과 대조적으로 RDBMS를 사용할 경우 ORM(Object-Relational Mapper) sqlalchemy가 대표적
+
+<!-- github token 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 -->

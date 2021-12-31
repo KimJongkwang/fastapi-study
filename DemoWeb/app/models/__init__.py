@@ -10,8 +10,8 @@ class MongoDB:
 
     def connect(self):
         print("DB와 연결 중 입니다.")
-        self.client = client = AsyncIOMotorClient(MONGO_URL)
-        self.engine = AIOEngine(motor_client=client, database=MONGO_DB_NAME)
+        self.client = AsyncIOMotorClient(MONGO_URL)
+        self.engine = AIOEngine(motor_client=self.client, database=MONGO_DB_NAME)
         print("DB와 성공적으로 연결이 되었습니다.")
 
     def close(self):

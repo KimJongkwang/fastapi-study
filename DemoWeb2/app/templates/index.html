@@ -36,6 +36,13 @@
         <div>
           <img src="{{book.image}}" width="150px" height="200px" />
           <p>
+            {% if book.title|length >10 %}
+            <!-- -->
+            {{book.title[:10]}}...
+            <!-- -->
+            {% else %} {{book.title}} {% endif %}
+          </p>
+          <p>
             {% if book.publisher|length >10 %}
             <!-- -->
             {{book.publisher[:10]}}...

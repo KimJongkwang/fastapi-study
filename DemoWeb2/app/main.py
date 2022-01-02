@@ -1,3 +1,4 @@
+import re
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -43,7 +44,7 @@ async def search(request: Request, q: str):
     book_models = [
         BookModel(
             keyword=q,
-            title=book["title"],
+            title=re.sub("(<([^>]+)>)", " ", book["title"]),
             publisher=book["publisher"],
             price=book["price"],
             image=book["image"],

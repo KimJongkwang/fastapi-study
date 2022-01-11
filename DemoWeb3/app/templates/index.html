@@ -1,0 +1,61 @@
+<html lang="en">
+  <head>
+    <title>콜렉터스 북북이</title>
+    <link href="https://unpkg.com/mvp.css" rel="stylesheet" />
+  </head>
+  <style>
+    section {
+      display: flex;
+      flex-wraps: wraps;
+      gap: 15px;
+    }
+  </style>
+  <body>
+    <header>
+      <h1>콜렉터스 북북이</h1>
+      <center>
+        <form id="search_form" action="/search">
+          <input
+            type="search"
+            placeholder="keyword"
+            id="search_input"
+            name="q"
+          />
+          <button type="submit">검색</button>
+        </form>
+      </center>
+    </header>
+    <main>
+      {% if books %}
+      <center>
+        <!-- {{books | length}}는 len(books)와 같음 -->
+        <h3 style="color: gray">{{books | length}}권의 책을 수집하였습니다.</h3>
+      </center>
+      <section>
+        {% for book in books %}
+        <div>
+          <img src="{{book.image}}" width="150px" height="200px" />
+          <p>
+            {% if book.title|length >10 %}
+            <!-- -->
+            {{book.title[:10]}}...
+            <!-- -->
+            {% else %} {{book.title}} {% endif %}
+          </p>
+          <p>
+            {% if book.publisher|length >10 %}
+            <!-- -->
+            {{book.publisher[:10]}}...
+            <!-- -->
+            {% else %} {{book.publisher}} {% endif %}
+          </p>
+          <p>{{book.price}} 원</p>
+        </div>
+        {% endfor %}
+      </section>
+      {% else %}
+      <center><h3 style="color: gray">Please Input Keyword..</h3></center>
+      {% endif %}
+    </main>
+  </body>
+</html>

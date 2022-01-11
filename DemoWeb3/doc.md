@@ -5,6 +5,12 @@
 - UI
   - 템플릿 구성
   - 템플릿별 request/response 테스트
+    - `app.get("/", reponse_class=HTMLResponse)` # get으로 데이터 요청반환시, response 클래스를 설정할 수 있음 Defalut는 JsonResponse
+    - 템플릿 구성
+      - `from fastapi.templating import Jinja2Templates`
+      - `templates = Jinja2Templates("{템플릿 폴더}")`
+      - HTML로 보낼시 반환객체는 아래와 같음
+        - `templates.TemplateResponse("{템플릿 명}", {"request": request, .. 반환 데이터)`
 
 2. DB 연결
 
@@ -15,7 +21,8 @@
 
 - `odmantic`을 사용하여 fastapi와 연결
   <!-- - odmantic은 ODM(Object-Document Mapper) pydantic을 통해 정의한 모델을 nosql을 객체로 처리할 수 있도록 도와줌
-  - odmantic과 대조적으로 RDBMS를 사용할 경우 ORM(Object-Relational Mapper) sqlalchemy가 대표적 -->
+  - odmantic과 대조적으로 RDBMS를 사용할 경우 ORM(Object-Relational Mapper) sqlalchemy가 대표적
+  https://art049.github.io/odmantic/engine/ -->
   - `main.py`의 app.on_event()을 통해서 서버 실행 및 종료시 DB 연결 이벤트 추가
   - `models.__init__.py` DB 연결, 해제 정의
 

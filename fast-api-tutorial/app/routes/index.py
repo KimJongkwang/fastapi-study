@@ -30,7 +30,7 @@ async def index(session: Session = Depends(db.session), ):
     """
 
     # 기본 orm insert 구문
-    user = Users(stauts="active", name="김종광")
+    user = Users(status="active", name="김종광")
     session.add(user)
     session.commit()
 

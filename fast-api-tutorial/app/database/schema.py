@@ -19,7 +19,8 @@ class BaseMixin:
     def __hash__(self) -> int:
         return hash(self.id)
 
-    def create(self, session: Session, auto_commit=False, **kwagrs):
+    @classmethod
+    def create(cls, session: Session, auto_commit=False, **kwagrs):
         """
         테이블 데이터 적재 전용 함수
         Args:
@@ -27,15 +28,16 @@ class BaseMixin:
             auto_commit (bool, optional): 자동커밋 여부
             kwagrs: 적재할 데이터들
         """
-        for col in self.all_columns():
+        obj = cls()
+        for col in obj.all_columns():
             col_name = col.name
             if col_name in kwagrs:
-                setattr(self, col_name, kwagrs.get(col_name))
-        session.add(self)
+                setattr(obj, col_name, kwagrs.get(col_name))
+        session.add(obj)
         session.flush()
         if auto_commit:
             session.commit()
-        return self
+        return obj
 
 
 class Users(Base, BaseMixin):

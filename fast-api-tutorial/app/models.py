@@ -4,9 +4,6 @@ from pydantic.main import BaseModel
 from pydantic.networks import EmailStr
 from dataclasses import dataclass
 
-from zmq import THREAD_AFFINITY_CPU_REMOVE
-
-
 # models.py: pydantic이 validation 하는 model
 # json으로 입력받고, json으로 주는 모든 데이터를 객체화 하기 위해 model class로 정의한다.
 

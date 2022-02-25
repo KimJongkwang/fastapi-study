@@ -39,6 +39,10 @@ class BaseMixin:
             session.commit()
         return obj
 
+    @classmethod
+    def get(cls, session: Session):
+        # obj = cls()
+        ...
 
 class Users(Base, BaseMixin):
     __tablename__ = "users"

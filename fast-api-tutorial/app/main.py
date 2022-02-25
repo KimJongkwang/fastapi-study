@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 from common.config import conf
 from database.conn import db
-from routes import index
+from routes import index, auth
 # from common.config import conf
 
 
@@ -32,6 +32,12 @@ def create_app():
 
 
 app = create_app()
+
+# from models import SnsType, Token, UserToken, UserRegister
+# sns_type = SnsType(email="kjk6646@gmail.com")
+# # reg_info = UserRegister(email="kjk6646@gmail.com", pw="1234")
+
+# print(sns_type, reg_info)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="localhost", port=8080, reload=True)

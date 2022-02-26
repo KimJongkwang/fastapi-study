@@ -2,7 +2,7 @@
 from sqlalchemy.schema import Column
 from sqlalchemy import Integer, DateTime, func, Enum, String, Boolean
 from sqlalchemy.orm import Session
-
+from database.conn import db
 
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -40,9 +40,33 @@ class BaseMixin:
         return obj
 
     @classmethod
-    def get(cls, session: Session):
+    def get(cls, **kwagrs):
+        """
+        Simply get a row
+
+        Raises:
+            Exception:
+
+        Returns:
+            _type_: _description_
+        """
         # obj = cls()
+        # get(select)은 commit이 필요 없기 때문에, 추가로 세션을 하나 더 받아온다. 이때 next를 사용하여 return 시 자동으로 세션이 종료되게끔 유도
+        session = next(db.session())  # 단, 트래픽이 얼마나 발생할지 여부에 따라 next()로 받는 것보다, parameter로 session을 받아 오는것이 좋을 수 있음
+        query = session.query(cls)
+        print(query)
+        for key, val in kwagrs.items():
+            col = getattr(cls, key)
+            query = query.filter(col == val)  # filter 정의: 2개 이상 로우를 전달
+
+        if query.count() > 1:
+            raise Exception("Only one row is supposed to be returned, but got more than one.")
+        return query.first()
+
+    @classmethod
+    def filter(cls):
         ...
+
 
 class Users(Base, BaseMixin):
     __tablename__ = "users"

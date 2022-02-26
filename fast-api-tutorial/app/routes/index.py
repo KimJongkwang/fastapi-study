@@ -35,7 +35,7 @@ async def index(session: Session = Depends(db.session), ):
     session.commit()
 
     # 함수로 관리
-    Users().create(session, auto_commit=True, name="김종광2")
-    
+    # Users().create(session, auto_commit=True, name="김종광2")
+
     current_time = datetime.utcnow()
     return Response(f"Notificaton API (UTC: {current_time.strftime('%Y%m%d%H%M%S')})")

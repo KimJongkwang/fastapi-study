@@ -19,7 +19,7 @@ class LocalConfig(Config):
     PROJ_RELOAD: bool = True
     DB_URL: str = "mysql+pymysql://'travis':0000@localhost/notification_api?charset=utf8"
     # "mysql+pymysql://travis:0000@localhost/notification_api?charset=utf8mb4"
-                  
+
 
 @dataclass
 class ProdConfig(Config):

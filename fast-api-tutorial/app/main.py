@@ -16,7 +16,6 @@ def create_app():
     """
     c = conf()
     app = FastAPI()
-
     conf_dict = asdict(c)
     db.init_app(app, **conf_dict)
 
@@ -28,6 +27,7 @@ def create_app():
 
     # 라우터 정의
     app.include_router(index.router)
+    app.include_router(auth.router, tags=["Authentication"], prefix="/auth")
     return app
 
 

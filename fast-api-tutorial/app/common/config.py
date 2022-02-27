@@ -16,15 +16,17 @@ class Config:
 
 @dataclass
 class LocalConfig(Config):
-    PROJ_RELOAD: bool = True
     DB_URL: str = "mysql+pymysql://'travis':0000@localhost/notification_api?charset=utf8"
+    TRUSTED_HOSTS = ["*"]
+    ALLOW_SITE = ["*"]
     # "mysql+pymysql://travis:0000@localhost/notification_api?charset=utf8mb4"
 
 
 @dataclass
 class ProdConfig(Config):
     # 운영서버(Production Server)
-    PROJ_RELOAD: bool = False
+    TRUSTED_HOSTS = ["*"]
+    ALLOW_SITE = ["*"]
 
 
 def conf():

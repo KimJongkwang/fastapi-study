@@ -7,12 +7,23 @@
 
 - 프로젝트 run (create_app)
 
+2. models.py
+
+- Web을 통해 받는 JSON을 객체화하기 위한 모델
+- pydantic을 통해 validation
+
 2. common
 
 - config.py:
+
   - 환경설정(로컬 - 개발or운영)
   - DB initalize
     - mysql 서버 정보
+
+- consts.py
+  - 고정값 저장(JWT 토큰 secret)
+  - db정보는 로컬, 운영에 따라 달라지므로 config
+  - 참조할 상대경로 등을 들수 있겠음
 
 3. database
 
@@ -22,6 +33,14 @@
     - init app 설정,
 - schema.py:
   - table 스키마
+
+5. routes
+
+- main.py 에서 app.include_router()으로 정의할 endpoint(router)
+- index.py
+  - root "/"
+- auth.py
+  - 계정 생성, 로그인 및 사용자 인증 등
 
 3장 FastAPI에서 데이터베이스 연결하기( SQLAlchemy)
 
@@ -34,8 +53,10 @@
     - # 3306포트, 패스워드, volume 설정(/Users/dingrr/mysqldb --> E드라이브가 2TB로 남길래 E드라이브로 변경해줌) , 뒤는 encoding
     - docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=rlawhdrhkd2! --name docker-mysql -v E:\docker-container\DockerDesktop\mysql:/var/lib/mysql mysql --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
   - 3. 설치 및 실행 확인
-    - docker ps
+    - docker ps(현재 실행, -a 모든 컨테이너)
     - docker exec -it docker-mysql bash (컨테이너 내 bash 실행)
+    - docker stop {컨테이너 명} : 컨테이너 중지
+    - docker start {컨테이너 명} : 중지된 컨테이너 실행
   - 4.  유저계정 생성
 
     - travis CI를 사용할 계획으로 MySQL traivs 유저 생성
@@ -83,4 +104,27 @@
 
 4장 FastAPI에서 회원가입 만들기! Pydantic을 이용한 Validation
 
-- 1.
+- 1. 회원가입 router 생성
+
+  - auth.py
+    - 회원계정 생성, crud
+    - 토큰 발행 pip install pyjwt(Json Web Token 발행)
+    - bcrypt 설치
+    - 회원가입(register)
+      - 유저가 회원가입함. 데이터 서버로 전송(POST)
+      - sns_type, email, pw 등 json 받아 email 무결성 확인 후 패스워드 hashing, 유저 DB 등록(현재 email만 가능, sns 미구현)
+      - 이후 JWT 토큰 발행(pw db 저장)
+
+- 2. swagger를 통해 validaion 테스트
+  - localhost/docs 접근
+  - endpoint 별 post execute로 테스트
+
+5장 FastAPI 미들웨어 생성, 사용 및 삽질을 피하기 위한 방법
+
+- middlewares
+  - trusted_hosts.py
+    - 기존 starlette에 있는 미들웨어 TrustedHostMiddleware를 커스텀.
+    - 등록된 호스트 url을 검사해줌.
+    - trust hosts는 개발환경인지, 운영환경인지에 따라 config에서 관리
+    - except_path 추가. 검사 제외 url
+  -

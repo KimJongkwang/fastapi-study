@@ -16,7 +16,8 @@ from routes import index, auth
 # middleware
 from starlette.middleware.cors import CORSMiddleware
 from middlewares.token_validator import AccessControl
-from middlewares.trusted_hosts import TrustedHostMiddleware
+from middlewares.trusted_hosts import AddExceptPathTHM
+# from middlewares.trusted_hosts import TrustedHostMiddleware  # AddExceptPathTHM로 재정의
 
 
 def create_app():
@@ -48,7 +49,7 @@ def create_app():
     )
     # except_path = AWS Load balancer에서 health check(모니터링)을 위해 /health url 검사 제외
     # 기존의 starlette의 trustedhostmiddleware는 except path가 없어 새로 정의함
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=conf().TRUSTED_HOSTS, except_path=["/health"])
+    app.add_middleware(AddExceptPathTHM, allowed_hosts=conf().TRUSTED_HOSTS, except_path=["/health"])
 
     # 라우터 정의
     app.include_router(index.router)

@@ -21,7 +21,7 @@ from models import SnsType, Token, UserToken, UserRegister
 4. JWT 발급
 """
 
-router = APIRouter()
+router = APIRouter(prefix="/auth")
 
 
 @router.post("/register/{sns_type}", status_code=200, response_model=Token)

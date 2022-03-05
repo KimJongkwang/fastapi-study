@@ -53,17 +53,11 @@ def create_app():
 
     # 라우터 정의
     app.include_router(index.router)
-    app.include_router(auth.router, tags=["Authentication"], prefix="/auth")
+    app.include_router(auth.router, tags=["Authentication"], prefix="/api")
     return app
 
 
 app = create_app()
-
-# from models import SnsType, Token, UserToken, UserRegister
-# sns_type = SnsType(email="kjk6646@gmail.com")
-# # reg_info = UserRegister(email="kjk6646@gmail.com", pw="1234")
-
-# print(sns_type, reg_info)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="localhost", port=8080, reload=True)

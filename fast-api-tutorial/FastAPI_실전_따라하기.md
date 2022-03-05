@@ -145,3 +145,5 @@ def create_access_token(*, data: dict = None, expires_delta: int = None):
 
 - token_validator.py
   - 발행한 JWT에 대한 validation check
+- test endpoint 생성하여 미들웨어 및 토큰 검사 테스트
+  - 이때, 미들웨어나 토큰 검사 중간중간 print로 찍어 순서, 용도를 확인해보자.

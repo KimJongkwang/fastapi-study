@@ -119,7 +119,19 @@
   - localhost/docs 접근
   - endpoint 별 post execute로 테스트
 
-5장 FastAPI 미들웨어 생성, 사용 및 삽질을 피하기 위한 방법
+5장 JWT 발급하기
+
+```python
+def create_access_token(*, data: dict = None, expires_delta: int = None):
+    to_encode = data.copy()
+    print(data)
+    if expires_delta:
+        to_encode.update({"exp": datetime.utcnow() + timedelta(hours=expires_delta)})
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return encoded_jwt
+```
+
+6장 FastAPI 미들웨어 생성, 사용 및 삽질을 피하기 위한 방법
 
 - middlewares
   - trusted_hosts.py
@@ -128,3 +140,8 @@
     - trust hosts는 개발환경인지, 운영환경인지에 따라 config에서 관리
     - except_path 추가. 검사 제외 url
   -
+
+7장 FastAPI 에서 JWT 검사 미들웨어 만들기 - 삽질 방지!
+
+- token_validator.py
+  - 발행한 JWT에 대한 validation check

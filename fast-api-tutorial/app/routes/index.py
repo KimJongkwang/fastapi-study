@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, Request
 from sqlalchemy.orm import Session
 
 from database.conn import db
@@ -37,5 +37,15 @@ async def index(session: Session = Depends(db.session), ):
     # 함수로 관리
     # Users().create(session, auto_commit=True, name="김종광2")
 
+    current_time = datetime.utcnow()
+    return Response(f"Notificaton API (UTC: {current_time.strftime('%Y%m%d%H%M%S')})")
+
+
+@router.get("/test")
+async def test(request: Request):
+    """
+    ELB 상태 체크 API 테스트
+    """
+    print("state.user", request.state.user)
     current_time = datetime.utcnow()
     return Response(f"Notificaton API (UTC: {current_time.strftime('%Y%m%d%H%M%S')})")

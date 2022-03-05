@@ -35,17 +35,18 @@ class AccessControl:
         request = Request(scope=scope)
         headers = Headers(scope=scope)
 
-        # request.state.jongkwang = "Made by Jongkwang Kim"
+        request.state.jongkwang = "Made by Jongkwang Kim"
         # None 을 넣지 않으면 호출시에 인풋 에러 발생
         request.state.start = time.time()
         request.state.inspect = None  # 500 error 시 로깅하기위해 사용함 --> SENTRY 사용함
         request.state.user = None  # Token decode 하고 user 데이터를 넣음  --> JWT를 사용하는 이유: user 인증상태를 endpoint 마다 DB를 조회하여 검사하는 것을 지양
         request.state.is_admin_access = None
         ip_from = request.headers["x-forwarded-for"] if "x-forwarded-for" in request.headers.keys() else None
-        # x-forwarded-for << aws에서는 헤더에 ip가 위치함
+        # x-forwarded-for << aws에서는 load balancer 를 지나면서 고객의 ip가 "x-forwarded-for" 헤더가 추가됨
+        # 수집을 한다면, 약관 체크 필요
 
         if await self.url_pattern_check(request.url.path, self.except_path_regex) or request.url.path in self.except_path_list:
-            return await self.app(scope, receive, send)  # 이게 뭔가!?
+            return await self.app(scope, receive, send)  # check 예외 url 이라면, 요청을 funcion level로 전달
 
         if request.url.path.startswith("/api"):
             # api 인경우 헤더로 토큰 검사
@@ -59,6 +60,7 @@ class AccessControl:
 
         else:
             print(request.cookies)
+            # request.cookies["Authorization"] = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTEsImVtYWlsIjoia2prNjY0NkBuYXZlci5jb20iLCJuYW1lIjpudWxsLCJwaG9uZV9udW1iZXIiOm51bGwsInByb2ZpbGVfaW1nIjpudWxsLCJzbnNfdHlwZSI6bnVsbH0.DZYxrWuaaUIfRIPcYGfrwxMtKjRMl8vVtW754PRThGs"
             if "Authorization" not in request.cookies.keys():
                 response = JSONResponse(status_code=401, content=dict(msg="Authorization Required"))
                 return await response(scope, receive, send)
@@ -66,7 +68,7 @@ class AccessControl:
             request.state.user = await self.token_decode(access_token=request.cookies.get("Authorization"))
 
         request.state.req_time = D.datetime()
-        print(D.dateitme())
+        print(D.datetime())
         print(D.date())
         print(D.date_num())
 

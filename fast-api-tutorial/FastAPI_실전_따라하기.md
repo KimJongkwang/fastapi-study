@@ -147,3 +147,11 @@ def create_access_token(*, data: dict = None, expires_delta: int = None):
   - 발행한 JWT에 대한 validation check
 - test endpoint 생성하여 미들웨어 및 토큰 검사 테스트
   - 이때, 미들웨어나 토큰 검사 중간중간 print로 찍어 순서, 용도를 확인해보자.
+
+8장 익셉션 핸들링 - 유지보수가 힘들지 않도록
+
+- errors/exceptions.py
+  - 에러코드 정의
+  - API 예외처리, 상태코드, 등 상황마다 메시징
+  - middleware에서 에러 발생 시 exception_handler로 error에 대한 상태 response
+  - /routes/auth.py 의 function level에서 예외처리 필요!!!! 해볼것.

@@ -12,7 +12,9 @@ from starlette.datastructures import Headers
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from common import consts
+from models import UserToken
 from utils.date_utils import D
+from errors import exceptions as ex
 
 
 class AccessControl:
@@ -29,9 +31,6 @@ class AccessControl:
         self.except_path_regex = except_path_regex
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        print(self.except_path_regex)
-        print(self.except_path_list)
-
         request = Request(scope=scope)
         headers = Headers(scope=scope)
 
@@ -48,33 +47,44 @@ class AccessControl:
         if await self.url_pattern_check(request.url.path, self.except_path_regex) or request.url.path in self.except_path_list:
             return await self.app(scope, receive, send)  # check 예외 url 이라면, 요청을 funcion level로 전달
 
-        if request.url.path.startswith("/api"):
-            # api 인경우 헤더로 토큰 검사
-            if "Authorization" in request.headers.keys():
-                request.state.user = await self.token_decode(access_token=request.headers.get("Authorization"))
-                # 토큰 없음
+        try:
+            if request.url.path.startswith("/api"):
+                # api 인경우 헤더로 토큰 검사
+                if "authorization" in request.headers.keys():
+                    token_info = await self.token_decode(access_token=request.headers.get("Authorization"))
+                    request.state.user = UserToken(**token_info)
+                else:
+                    if "Authorization" not in request.headers.keys():
+                        # response = JSONResponse(status_code=401, content=dict(NotAuthorized))
+                        # return await response(scope, receive, send)
+                        raise ex.NotAuthorized()
+
             else:
-                if "Authorization" not in request.headers.keys():
-                    response = JSONResponse(status_code=401, content=dict(msg="Authorization Required"))
-                    return await response(scope, receive, send)
+                request.cookies["Authorization"] = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTEsImVtYWlsIjoia2prNjY0NkBuYXZlci5jb20iLCJuYW1lIjpudWxsLCJwaG9uZV9udW1iZXIiOm51bGwsInByb2ZpbGVfaW1nIjpudWxsLCJzbnNfdHlwZSI6bnVsbH0.DZYxrWuaaUIfRIPcYGfrwxMtKjRMl8vVtW754PRThGs"
+                if "Authorization" not in request.cookies.keys():
+                    # response = JSONResponse(status_code=401, content=dict(msg="Authorization Required"))
+                    # return await response(scope, receive, send)
+                    raise ex.NotAuthorized()
 
-        else:
-            print(request.cookies)
-            # request.cookies["Authorization"] = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTEsImVtYWlsIjoia2prNjY0NkBuYXZlci5jb20iLCJuYW1lIjpudWxsLCJwaG9uZV9udW1iZXIiOm51bGwsInByb2ZpbGVfaW1nIjpudWxsLCJzbnNfdHlwZSI6bnVsbH0.DZYxrWuaaUIfRIPcYGfrwxMtKjRMl8vVtW754PRThGs"
-            if "Authorization" not in request.cookies.keys():
-                response = JSONResponse(status_code=401, content=dict(msg="Authorization Required"))
-                return await response(scope, receive, send)
+                token_info = await self.token_decode(access_token=request.cookies.get("Authorization"))
+                request.state.user = UserToken(**token_info)
 
-            request.state.user = await self.token_decode(access_token=request.cookies.get("Authorization"))
+            request.state.req_time = D.datetime()
+            print(D.datetime())
+            print(D.date())
+            print(D.date_num())
 
-        request.state.req_time = D.datetime()
-        print(D.datetime())
-        print(D.date())
-        print(D.date_num())
+            print(request.cookies, "this is cookies")
+            print(headers)
+            res = await self.app(scope, receive, send)
 
-        print(request.cookies, "this is cookies")
-        print(headers)
-        res = await self.app(scope, receive, send)
+        except ex.APIException as e:
+            res = await self.exception_handler(e)
+            res = await res(scope, receive, send)
+
+        finally:
+            # logging
+            ...
         return res
 
     @staticmethod
@@ -99,7 +109,16 @@ class AccessControl:
         try:
             access_token = access_token.replace("Bearer ", "")
             payload = jwt.decode(access_token, key=consts.JWT_SECRET, algorithms=[consts.JWT_ALGORITHM])
-        except jwt.PyJWKError as e:
-            print(e)
-
+        except jwt.ExpiredSignatureError:
+            raise ex.TokenExpiredEx()
+        except jwt.DecodeError:
+            raise ex.TokenDecodeEx()
+        # except jwt.PyJWKError as e:
+        #     print(e)
         return payload
+
+    @staticmethod
+    async def exception_handler(error: ex.APIException):
+        error_dict = dict(status=error.status_code, msg=error.msg, detail=error.detail, code=error.code)
+        res = JSONResponse(status_code=error.status_code, content=error_dict)
+        return res

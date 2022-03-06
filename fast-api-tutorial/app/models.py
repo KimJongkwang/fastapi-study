@@ -46,3 +46,13 @@ class UserToken(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class UserMe(BaseModel):
+    id: int
+    email: str = None
+    name: str = None
+    sns_type: str = None
+
+    class Config:
+        orm_mode = True

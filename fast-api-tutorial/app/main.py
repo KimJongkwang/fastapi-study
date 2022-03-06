@@ -3,21 +3,25 @@ from typing import Optional
 from dataclasses import asdict
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from fastapi.security import APIKeyHeader
 
 # configuration
 from database.conn import db
 from common.config import conf
 from common.consts import EXCEPT_PATH_LIST, EXCEPT_PATH_REGEX
 
-# routes
-from routes import index, auth
-
 # middleware
 from starlette.middleware.cors import CORSMiddleware
 from middlewares.token_validator import AccessControl
 from middlewares.trusted_hosts import AddExceptPathTHM
 # from middlewares.trusted_hosts import TrustedHostMiddleware  # AddExceptPathTHM로 재정의
+
+# routes
+from routes import index, auth, users
+
+# APIKeyHeader: FastAPI swagger가 만들어주는 apikeyheader ui 및 헤더
+API_KEY_HEADER = APIKeyHeader(name="Authorization", auto_error=False)
 
 
 def create_app():
@@ -54,6 +58,8 @@ def create_app():
     # 라우터 정의
     app.include_router(index.router)
     app.include_router(auth.router, tags=["Authentication"], prefix="/api")
+    # app.include_router(users.router, tags=["Users"], prefix="/api", dependencies=[Depends(API_KEY_HEADER)])  # router 추가시 dependencies로 토큰 검사 필요시 apikey header에 의존성 주입
+    app.include_router(users.router, tags=["Users"], prefix="/api", dependencies=[Depends(API_KEY_HEADER)])
     return app
 
 

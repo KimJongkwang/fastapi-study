@@ -1,24 +1,24 @@
 # base
-from typing import Optional
 from dataclasses import asdict
 
+# fastapi
 import uvicorn
 from fastapi import FastAPI, Depends
 from fastapi.security import APIKeyHeader
 
-# configuration
-from database.conn import db
-from common.config import conf
-from common.consts import EXCEPT_PATH_LIST, EXCEPT_PATH_REGEX
-
 # middleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
-from middlewares.token_validator import AccessControl
+from middlewares.token_validator import access_control
 from middlewares.trusted_hosts import AddExceptPathTHM
 # from middlewares.trusted_hosts import TrustedHostMiddleware  # AddExceptPathTHM로 재정의
 
 # routes
 from routes import index, auth, users
+
+# configuration
+from database.conn import db
+from common.config import conf
 
 # APIKeyHeader: FastAPI swagger가 만들어주는 apikeyheader ui 및 헤더
 API_KEY_HEADER = APIKeyHeader(name="Authorization", auto_error=False)
@@ -38,7 +38,8 @@ def create_app():
     # 레디스 이니셜라이즈
 
     # 미들웨어 정의
-    app.add_middleware(AccessControl, except_path_list=EXCEPT_PATH_LIST, except_path_regex=EXCEPT_PATH_REGEX)
+    # app.add_middleware(AccessControl, except_path_list=EXCEPT_PATH_LIST, except_path_regex=EXCEPT_PATH_REGEX)
+    app.add_middleware(middleware_class=BaseHTTPMiddleware, dispatch=access_control)
     # CORS: abc.com 이라면 abc 에서만 접속 가능하도록.
     # 삽질 포인트,, app이 미들웨어를 추가하는데 순서가 중요.
     # 가장 아래의 미들웨어부터 실행한다.
@@ -58,12 +59,11 @@ def create_app():
     # 라우터 정의
     app.include_router(index.router)
     app.include_router(auth.router, tags=["Authentication"], prefix="/api")
-    # app.include_router(users.router, tags=["Users"], prefix="/api", dependencies=[Depends(API_KEY_HEADER)])  # router 추가시 dependencies로 토큰 검사 필요시 apikey header에 의존성 주입
-    app.include_router(users.router, tags=["Users"], prefix="/api", dependencies=[Depends(API_KEY_HEADER)])
+    app.include_router(users.router, tags=["Users"], prefix="/api", dependencies=[Depends(API_KEY_HEADER)])  # router 추가시 dependencies로 토큰 검사 필요시 apikey header에 의존성 주입
     return app
 
 
 app = create_app()
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="localhost", port=8080, reload=True)
+    uvicorn.run("main:app", host="localhost", port=80, reload=True)

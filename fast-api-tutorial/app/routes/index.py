@@ -1,10 +1,7 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Response, Request
-from sqlalchemy.orm import Session
-
-from database.conn import db
-from database.schema import Users
+from fastapi import APIRouter, Response, Request
+from inspect import currentframe as frame
 
 
 # Depends: FastAPI 내장 의존성 주입 메서드
@@ -24,15 +21,16 @@ router = APIRouter()
 
 
 @router.get("/")
-async def index(session: Session = Depends(db.session), ):
+async def index():
+# async def index(session: Session = Depends(db.session), ):
     """
     ELB 상태 체크 API
     """
 
     # 기본 orm insert 구문
-    user = Users(status="active", name="김종광")
-    session.add(user)
-    session.commit()
+    # user = Users(status="active", name="김종광")
+    # session.add(user)
+    # session.commit()
 
     # 함수로 관리
     # Users().create(session, auto_commit=True, name="김종광2")
@@ -46,6 +44,15 @@ async def test(request: Request):
     """
     ELB 상태 체크 API 테스트
     """
-    print("state.user", request.state.user)
+    # 이슈 !! zero division error를 예외처리에서 잡지 못한다.
+    # 왜 일까.
+    try:
+        a = 1 / 0
+    except Exception as e:
+        request.state.inspect = frame()
+        raise e
+        # inspect 핸들링되지 않은 에러가 있을 법한 곳에서 사용한다
+        # frame() : 파이썬 inspect 모듈의 currentframe 함수, 현재의 위치 등등을 기록
+
     current_time = datetime.utcnow()
     return Response(f"Notificaton API (UTC: {current_time.strftime('%Y%m%d%H%M%S')})")

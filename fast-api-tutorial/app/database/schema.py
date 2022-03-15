@@ -217,8 +217,7 @@ class ApiKeys(Base, BaseMixin):
     """
     create table api_keys
     (
-        id             int auto_increment
-            primary key,
+        id             int auto_increment primary key,
         access_key     varchar(64)                                                     not null,
         secret_key     varchar(64)                                                     not null,
         user_memo      varchar(50)                                                     null,
@@ -238,3 +237,19 @@ class ApiWhitelists(Base, BaseMixin):
 
     ip_addr = Column(String(length=64), nullable=False)
     api_key_id = Column(Integer, ForeignKey("api_keys.id"), nullable=False)
+
+
+    """
+    CREATE TABLE api_whitelists
+    (
+        id			INT 		AUTO_INCREMENT 	PRIMARY KEY,
+        ip_addr 	VARCHAR(64)									NOT NULL,
+        api_key_id	INT											NOT NULL,
+        updated_at	DATETIME	ON UPDATE CURRENT_TIMESTAMP		NOT NULL,
+        craeted_at	DATETIME	DEFAULT CURRENT_TIMESTAMP		NOT NULL,
+
+        CONSTRAINT	api_whitelists_api_keys_id_fk
+            FOREIGN KEY (api_key_id) REFERENCES api_keys (id)
+                ON DELETE CASCADE
+    );
+    """

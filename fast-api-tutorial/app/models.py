@@ -1,5 +1,5 @@
 from enum import Enum
-
+from datetime import datetime
 from pydantic.main import BaseModel
 from pydantic.networks import EmailStr
 
@@ -56,3 +56,36 @@ class UserMe(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class AddApiKey(BaseModel):
+    user_memo: str = None
+
+    class Config:
+        orm_mode = True
+
+class GetApiKeyList(AddApiKey):
+    id: int
+    access_key: str = None
+    created_at: datetime = None
+
+    class Config:
+        orm_mode = True
+
+
+class GetApiKeys(GetApiKeyList):
+    id: int
+    email: str = None
+    name: str = None
+    api_key: str = None
+
+
+# class CreateAPIWhiteLists(BaseModel):
+#     ip_addr: str = None
+
+
+# class GetAPIWhiteLists(CreateAPIWhiteLists):
+#     id: int
+
+#     class Config:
+#         orm_mode = True

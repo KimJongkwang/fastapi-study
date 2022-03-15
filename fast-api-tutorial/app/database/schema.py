@@ -176,6 +176,7 @@ class BaseMixin:
 
 class Users(Base, BaseMixin):
     __tablename__ = "users"
+
     status = Column(Enum("active", "deleted", "blocked"), default="active")  # Enum 셋 중 하나만 입력 가능(validation용)
     email = Column(String(length=255), nullable=True)
     pw = Column(String(length=2000), nullable=True)
@@ -204,9 +205,36 @@ class Users(Base, BaseMixin):
 
 class ApiKeys(Base, BaseMixin):
     __tablename__ = "api_keys"
+
     access_key = Column(String(length=64), nullable=False, index=True)
     secret_key = Column(String(length=64), nullable=False)
     user_memo = Column(String(length=40), nullable=True)
     status = Column(Enum("active", "deleted", "blocked"), default="active")
     is_whitelisted = Column(Boolean, default=False)  # api 로 받아낼 수 있는 IP주소
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    # 화이트리스트는 식별된 일부 실체들이 특정 권한, 서비스, 이동, 접근, 인식에 대해 명시적으로 허가하는 목록이며, 이에 대한 과정은 화이트리스팅이라고 한다
+
+    """
+    create table api_keys
+    (
+        id             int auto_increment
+            primary key,
+        access_key     varchar(64)                                                     not null,
+        secret_key     varchar(64)                                                     not null,
+        user_memo      varchar(50)                                                     null,
+        status         enum ('active', 'stopped', 'deleted') default 'active'          not null,
+        is_whitelisted tinyint(1)                            default 0                 null,
+        user_id        int                                                             not null,
+        updated_at     datetime                              ON UPDATE CURRENT_TIMESTAMP null,
+        created_at     datetime                              default CURRENT_TIMESTAMP null
+    );
+
+    CREATE INDEX api_keys_access_key_index ON api_keys (access_key);
+    """
+
+
+class ApiWhitelists(Base, BaseMixin):
+    __tablename__ = "api_whitelists"
+
+    ip_addr = Column(String(length=64), nullable=False)
+    api_key_id = Column(Integer, ForeignKey("api_keys.id"), nullable=False)

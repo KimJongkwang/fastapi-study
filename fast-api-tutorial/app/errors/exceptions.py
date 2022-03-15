@@ -2,6 +2,8 @@
 # 추후 예외가 수 백개 이상 많아지게 되면, 데이터베이스에서 관리
 # 예외를 백엔드에서 관리하는 것이 프론트엔드에서 UX차원에서 좋을 것 같다?
 
+from common.consts import MAX_API_KEY, MAX_API_WHITELIST
+
 
 class StatusCode:
     HTTP_500 = 500
@@ -89,3 +91,28 @@ class TokenDecodeEx(APIException):
             code=f"{StatusCode.HTTP_400}{'2'.zfill(4)}",
             ex=ex,
         )
+
+
+class MaxKeyCountEx(APIException):
+    def __init__(self, ex: Exception = None):
+        super().__init__(
+            status_code=StatusCode.HTTP_400, 
+            msg=f"API 키 생성은 {MAX_API_KEY}개 까지 가능합니다.",
+            detail="Max Key Count Reached",
+            code=f"{StatusCode.HTTP_400}{'5'.zfill(4)}",
+            ex=ex,
+        )
+
+
+class MayWLCountEx(APIException):
+    def __init__(self, ex: Exception = None):
+        super().__init__(
+            status_code=StatusCode.HTTP_400, 
+            msg=f"API 키 생성은 {MAX_API_WHITELIST}개 까지 가능합니다.",
+            detail="Max Whitelist Count Reached",
+            code=f"{StatusCode.HTTP_400}{'5'.zfill(4)}",
+            ex=ex,
+        )
+
+
+# class

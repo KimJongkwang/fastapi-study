@@ -96,7 +96,7 @@ class TokenDecodeEx(APIException):
 class MaxKeyCountEx(APIException):
     def __init__(self, ex: Exception = None):
         super().__init__(
-            status_code=StatusCode.HTTP_400, 
+            status_code=StatusCode.HTTP_400,
             msg=f"API 키 생성은 {MAX_API_KEY}개 까지 가능합니다.",
             detail="Max Key Count Reached",
             code=f"{StatusCode.HTTP_400}{'5'.zfill(4)}",
@@ -104,10 +104,10 @@ class MaxKeyCountEx(APIException):
         )
 
 
-class MayWLCountEx(APIException):
+class MaxWLCountEx(APIException):
     def __init__(self, ex: Exception = None):
         super().__init__(
-            status_code=StatusCode.HTTP_400, 
+            status_code=StatusCode.HTTP_400,
             msg=f"API 키 생성은 {MAX_API_WHITELIST}개 까지 가능합니다.",
             detail="Max Whitelist Count Reached",
             code=f"{StatusCode.HTTP_400}{'5'.zfill(4)}",
@@ -115,4 +115,23 @@ class MayWLCountEx(APIException):
         )
 
 
-# class
+class NoKeyMatchEx(APIException):
+    def __init__(self, ex: Exception = None):
+        super().__init__(
+            status_code=StatusCode.HTTP_404,
+            msg="해당 키에 대한 권한이 없거나 해당 키가 없습니다.",
+            detail="No Keys Matched",
+            code=f"{StatusCode.HTTP_404}{'3'.zfill(4)}",
+            ex=ex,
+        )
+
+
+class InvalidIpEx(APIException):
+    def __init__(self, ip: str, ex: Exception = None):
+        super().__init__(
+            status_code=StatusCode.HTTP_400,
+            msg=f"{ip}는 올바른 IP가 아닙니다.",
+            detail=f"inavlid ip : {ip}",
+            code=f"{StatusCode.HTTP_400}{'3'.zfill(4)}",
+            ex=ex,
+        )

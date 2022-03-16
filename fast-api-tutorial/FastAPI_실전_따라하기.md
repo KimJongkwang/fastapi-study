@@ -203,5 +203,34 @@ async def add_process_time_header(request: Request, call_next):
 ### 11장 빠른속도로 endpoint찍어내기
 
 - 추가로 공부할 사항
+
   - uuid 패키지(API key 생성)
   - mysql constraint
+
+- secret key 생성 `string`모듈을 사용해 아스키문자, 숫자 40개 랜덤 배열
+
+```python
+alphabet = string.ascii_letters + string.digits
+s_key = "".join(secrets.choice(alphabet) for _ in range(40))
+```
+
+- uuid 패키지(API key(access) 생성) [uuid](docs.python.org/3/library/uuid.html#uuid.uuid4)
+
+  - uuid 1 ~ 5
+  - 1: host id + current time
+  - 3: MD5 hash of namespace UUID
+  - 4: random UUID
+  - 5: using a SHA-1 hash of a namespace UUID
+
+  - 두번의 uuid로 토큰 생성
+  - 생성한 uid가 유니크한지 검사 후 uid로 할당
+  - 테이블에 unique 키를 주어도 되지만, 유지보수의 경험상 function level에서 검사하는 것이 조금 더 낫다고 판단..
+
+```python
+uid = None
+while not uid:
+    uid_candidate = f"{str(uuid4())[:-12]}{str(uuid4())}"
+    uid_check = ApiKeys.get(access_key=uid_candidate)
+    if not uid_check:
+        uid = uid_candidate
+```

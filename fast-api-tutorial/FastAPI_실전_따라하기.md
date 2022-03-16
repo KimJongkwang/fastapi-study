@@ -138,11 +138,29 @@ def create_access_token(*, data: dict = None, expires_delta: int = None):
 ### 6장 FastAPI 미들웨어 생성, 사용 및 삽질을 피하기 위한 방법
 
 - middlewares
+
   - trusted_hosts.py
     - 기존 starlette에 있는 미들웨어 TrustedHostMiddleware를 커스텀.
     - 등록된 호스트 url을 검사해줌.
     - trust hosts는 개발환경인지, 운영환경인지에 따라 config에서 관리
     - except_path 추가. 검사 제외 url
+
+- 9장 도입에서 FastAPI 공식문서의 middleware를 생성하는 방법에 대해 알려준다.
+  - 공식문서에서는 middelware 데코레이터를 활용하여 call_next()로 받아준다.
+
+```python
+@app.middlware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
+```
+
+- 변경점
+  - 기존의 starlette의 미들웨어 구성과 같이 class로 구현하였으나,
+  -
 
 ### 7장 FastAPI 에서 JWT 검사 미들웨어 만들기 - 삽질 방지!
 
@@ -158,3 +176,32 @@ def create_access_token(*, data: dict = None, expires_delta: int = None):
   - API 예외처리, 상태코드, 등 상황마다 메시징
   - middleware에서 에러 발생 시 exception_handler로 error에 대한 상태 response
   - /routes/auth.py 의 function level에서 예외처리 필요!!!! 해볼것.
+
+### 9장 FastAPI에서 로깅하기 - 개발자를 살려주는 로그
+
+- log는 취향
+- 이번 프로젝트에서는 log를 json으로 저장하였으나, 이는 저장비용이 매우 큼
+  - 따라서 텍스트로 쌓는 것을 권장(Elastic beanstalk 활용)
+  - aws cloudwatch를 활용하여 elastic beanstalk 로그 적재 모니터링
+    - elastic beanstalk 에서 로그를 적재하는 것을 사용
+    - 자동으로 log rotation을 지원
+    - S3에 텍스트 파일로 저장
+    - Cloudwatch 에서 로그 조회 검색
+    - 텍스트 파일은 DB가 아니기 때문에 Athena(query 비싸다..)라는 서비스를 이용함
+  - 추후 운영이 되면 해볼 것(사용화 된다면!)
+    - 최근 60일치의 로그는 dynamoDB 또는 mongoDB에서 nosql로 저장
+    - 60일 지난 로그는 S3에 텍스트 파일로 저장
+    - 6개월 이후 글래시어? 아카이브?
+
+### 10장 FastAPI 개발을 빠르게 해주는 나만의 SQL Alchemy Wrapper 만들어보기
+
+- orm을 편하게 사용하기 위한 wrapper 생성
+- 구현한 schema들이 BaseMixin을 상속하기 때문에, 기본 CRUD를 BaseMixin에 구현
+- schema.py
+  - BaseMixin
+
+### 11장 빠른속도로 endpoint찍어내기
+
+- 추가로 공부할 사항
+  - uuid 패키지(API key 생성)
+  - mysql constraint

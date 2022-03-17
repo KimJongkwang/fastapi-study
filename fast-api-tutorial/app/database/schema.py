@@ -63,7 +63,6 @@ class BaseMixin:
         # get(select)은 commit이 필요 없기 때문에, 추가로 세션을 하나 더 받아온다. 이때 next를 사용하여 return 시 자동으로 세션이 종료되게끔 유도
         session = next(db.session())  # 단, 트래픽이 얼마나 발생할지 여부에 따라 next()로 받는 것보다, parameter로 session을 받아 오는것이 좋을 수 있음
         query = session.query(cls)
-        print(query, "@@@@@@@@@@@@@@@ 이건 get 쿼리")
         for key, val in kwagrs.items():
             col = getattr(cls, key)
             query = query.filter(col == val)  # filter 정의: 2개 이상 로우를 전달
@@ -138,12 +137,17 @@ class BaseMixin:
             self._q = self._q.order_by(col.asc()) if is_asc else self._q.order_by(col.desc())  # 이건 또 뭐지 sqlalchemy 함수인듯
         return self
 
-    def update(self, auto_commit: bool = False, **kwagrs):
-        result = self._q.update(kwagrs)
+    def update(self, auto_commit: bool = False, **kwargs):
+        qs = self._q.update(kwargs)
+        get_id = self.id
+        ret = None
+
         self._session.flush()
+        if qs > 0 :
+            ret = self._q.first()
         if auto_commit:
             self._session.commit()
-        return result  # 요건 좀 더 확인해보자. update인데, result를 반환?
+        return ret  # 요건 좀 더 확인해보자. update인데, result를 반환?
 
     def first(self):
         result = self._q.first()
@@ -232,12 +236,11 @@ class ApiKeys(Base, BaseMixin):
     """
 
 
-class ApiWhitelists(Base, BaseMixin):
+class ApiWhiteLists(Base, BaseMixin):
     __tablename__ = "api_whitelists"
 
     ip_addr = Column(String(length=64), nullable=False)
     api_key_id = Column(Integer, ForeignKey("api_keys.id"), nullable=False)
-
 
     """
     CREATE TABLE api_whitelists

@@ -8,7 +8,7 @@ from zmq import REQ
 
 import models as m
 from sqlalchemy.orm import Session
-from database.schema import Users, ApiKeys, ApiWhitelists
+from database.schema import Users, ApiKeys, ApiWhiteLists
 from database.conn import db
 
 from common.consts import MAX_API_KEY, MAX_API_WHITELIST
@@ -89,7 +89,7 @@ async def create_api_keys(request: Request, key_info: m.AddApiKey, session: Sess
     return new_key
 
 
-@router.put("/apikeys/{key_id}")
+@router.put("/apikeys/{key_id}", response_model=m.GetApiKeyList)
 async def update_api_keys(request: Request, key_id: int, key_info: m.AddApiKey):
     """
     update api key
@@ -99,9 +99,9 @@ async def update_api_keys(request: Request, key_id: int, key_info: m.AddApiKey):
     """
 
     user = request.state.user
-    key_data = ApiKeys.filter(id == key_id)
+    key_data = ApiKeys.filter(id=key_id)
     if key_data and key_data.first().user_id == user.id:
-        key_data.update(auto_commit=True, **key_info.dict())
+        return key_data.update(auto_commit=True, **key_info.dict())
     raise ex.NoKeyMatchEx()
 
 
@@ -129,7 +129,7 @@ async def delete_api_keys(request: Request, key_id: int, access_key: str):
 async def get_api_keys_from_whitelist(request: Request, key_id: int):
     user = request.state.user
     await check_api_owner(user.id, key_id)
-    whitelists = ApiWhitelists.filter(api_key_id=key_id).all()
+    whitelists = ApiWhiteLists.filter(api_key_id=key_id).all()
     return whitelists
 
 
@@ -146,13 +146,13 @@ async def put_api_keys(request: Request, key_id: int, ip: m.CreateApiWhiteLists,
     except Exception as e:
         raise ex.InvalidIpEx(ip.ip_addr, e)
 
-    if ApiWhitelists.filter(api_key_id=key_id).count() == MAX_API_WHITELIST:
+    if ApiWhiteLists.filter(api_key_id=key_id).count() == MAX_API_WHITELIST:
         raise ex.MaxWLCountEx()
 
-    ip_dup = ApiWhitelists.get(api_key_id=key_id, ip_addr=ip.ip_addr)
+    ip_dup = ApiWhiteLists.get(api_key_id=key_id, ip_addr=ip.ip_addr)
     if ip_dup:
         return ip_dup
-    ip_reg = ApiWhitelists.create(session=session, auto_commit=True, api_key_id=key_id, ip_addr=ip.ip_addr)
+    ip_reg = ApiWhiteLists.create(session=session, auto_commit=True, api_key_id=key_id, ip_addr=ip.ip_addr)
     return ip_reg
 
 
@@ -160,7 +160,7 @@ async def put_api_keys(request: Request, key_id: int, ip: m.CreateApiWhiteLists,
 async def delete_api_keys_from_whitelist(request: Request, key_id: int, list_id: int):
     user = request.state.user
     await check_api_owner(user.id, key_id)
-    ApiWhitelists.filter(id=list_id, api_key_id=key_id).delete()
+    ApiWhiteLists.filter(id=list_id, api_key_id=key_id).delete()
 
     return m.MessageOk()
 

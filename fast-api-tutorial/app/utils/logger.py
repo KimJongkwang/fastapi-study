@@ -13,7 +13,7 @@ async def api_logger(request: Request, response=None, error=None):
     status_code = error.status_code if error else response.status_code
     error_log = None
     user = request.state.user
-    body = await request.body()  # put, post에서는 body 로그 추가
+    # body = await request.body()  # put, post에서는 body 로그 추가
     if error:
         if request.state.inspect:
             frame = request.state.inspect
@@ -27,7 +27,7 @@ async def api_logger(request: Request, response=None, error=None):
             errorFunc=error_func,
             location="{} line in {}".format(str(error_line), error_file),
             raised=str(error.__class__.__name__),
-            msg=str(error.ex)
+            msg=str(error.ex),
         )
 
     email = user.email.split("@") if user and user.email else None
@@ -48,8 +48,8 @@ async def api_logger(request: Request, response=None, error=None):
         datetimeKST=(datetime.utcnow() + timedelta(hours=9)).strftime(time_format),
     )
 
-    if body:
-        log_dict["body"] = body
+    # if body:
+    #     log_dict["body"] = body
     if error and error.status_code >= 500:
         logger.error(json.dumps(log_dict))  # 500 에러는 error(처리가 안된 에러들)
     else:

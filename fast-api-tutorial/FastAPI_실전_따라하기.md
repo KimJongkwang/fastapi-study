@@ -234,3 +234,26 @@ while not uid:
     if not uid_check:
         uid = uid_candidate
 ```
+
+- logger.py
+- 당초에는 `body = await request.body()`를 통해 put, post에 대한 로깅도 진행
+
+  - 로깅에서 starlette.requests.ClientDisconnect 에러발생
+  - 어떠한 이유인지는 모름.. 현재 body 관련 주석처리 이후 동작
+
+- schema.py
+- users.py의 `update_api_keys()`는 key_id를 받아 간단하게 user_memo 컬럼을 변경하는 함수인데,
+- key를 받고 update시에 DB에는 커밋이 되었으나, 그 이후 update된 로우를 리턴하는 과정에서 아래와 같은 에러 발생
+  - `sqlalchemy.exc.UnboundExecutionError: Instance <~~> is not bound to a Session; attribute refresh operation cannot proceed`
+- 스택오버플로우에서는 세션에서 객체의 상태가 업데이트(refresh) 됨으로써 만료(expired)가 된 객체를 호출하여 발생한 에러라고 함(delete, update에서 주로 발생하는 듯)
+  - 예를 들면, a 를 지워놓고 a 를 리턴, 또는 a 를 a'로 업데이트하고 또 a를 리턴
+
+```python
+>>> from sqlalchemy import inspect
+>>> insp = inspect(my_object)
+>>> insp.expired
+True # if True, is expired
+```
+
+- 이에 대한 해결로는 업데이트 이후의 객체를 세션에서 지워주는 것으로 해결하였음. `session.expunge(obj)`
+- 본 프로젝트에서는 schema.py의 update에서 update한 객체를 다시 first()로 호출하는 뒷 라인에 `expunge()`를 통해 객체상태를 세션에서 지워주고 데이터만 리턴함

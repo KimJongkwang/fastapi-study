@@ -145,9 +145,10 @@ class BaseMixin:
         self._session.flush()
         if qs > 0 :
             ret = self._q.first()
+            self._session.expunge(ret)
         if auto_commit:
             self._session.commit()
-        return ret  # 요건 좀 더 확인해보자. update인데, result를 반환?
+        return ret  # first()로 가져옴.
 
     def first(self):
         result = self._q.first()

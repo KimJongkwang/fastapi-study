@@ -102,6 +102,7 @@ async def update_api_keys(request: Request, key_id: int, key_info: m.AddApiKey):
     key_data = ApiKeys.filter(id=key_id)
     if key_data and key_data.first().user_id == user.id:
         return key_data.update(auto_commit=True, **key_info.dict())
+
     raise ex.NoKeyMatchEx()
 
 

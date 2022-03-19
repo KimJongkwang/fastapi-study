@@ -30,7 +30,6 @@ async def get_me(request: Request):
     get my info
     """
     user = request.state.user
-    print(user.id)
     # user_info = Users.get(id=user.id)
     user_info = Users.filter(id__gt=user.id).order_by("email").count()  # 이건 장고스타일
     # user_info = session.query(Users).filter(Users.id > user.id).order_by(Users.email.asc()).count()  # sql alchemy 스타일
@@ -72,8 +71,8 @@ async def create_api_keys(request: Request, key_info: m.AddApiKey, session: Sess
     user = request.state.user
 
     api_keys = ApiKeys.filter(session, user_id=user.id, status="active").count()
-    if api_keys == MAX_API_KEY:
-        raise ex.MaxKeyCountEx()
+    if api_keys >= MAX_API_KEY:
+        raise ex.MaxKeyCountEx()  # 이것 또한 None을 리턴함
 
     alphabet = string.ascii_letters + string.digits
     s_key = "".join(secrets.choice(alphabet) for _ in range(40))

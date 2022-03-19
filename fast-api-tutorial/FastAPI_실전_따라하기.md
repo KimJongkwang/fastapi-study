@@ -257,3 +257,12 @@ True # if True, is expired
 
 - 이에 대한 해결로는 업데이트 이후의 객체를 세션에서 지워주는 것으로 해결하였음. `session.expunge(obj)`
 - 본 프로젝트에서는 schema.py의 update에서 update한 객체를 다시 first()로 호출하는 뒷 라인에 `expunge()`를 통해 객체상태를 세션에서 지워주고 데이터만 리턴함
+
+- 특이사항
+
+  - users.py의 `create_api_keys()`에서 이전 ZeroDivisionError와 같이 아래 ex.MaxKeyCountEx()를 None으로 반환해버림
+  - 정의된 함수까지 None으로 반환하는 이유는 뭘까
+
+  ```python
+  raise ex.MaxKeyCountEx()
+  ```

@@ -1,8 +1,10 @@
 # 들어오는 요청에 대해 토큰 검사, API 요청에서 헤더의 엑세스 토큰 검사
 # API가 아니라 템플릿에서 렌더링이 요구되는 상황에서는 쿠키의 토큰 검사
+import base64
 import time
 import re
 import jwt
+import hmac
 
 # from fastapi.responses import JSONResponse
 from starlette.requests import Request
@@ -11,8 +13,11 @@ from common.consts import (
     EXCEPT_PATH_REGEX, EXCEPT_PATH_LIST,
     JWT_SECRET, JWT_ALGORITHM
 )
+from database.conn import db
+from database.schema import ApiKeys
 from models import UserToken
 from utils.date_utils import D
+from utils.query_utils import to_dict
 from utils.logger import api_logger
 from errors import exceptions as ex
 from errors.exceptions import APIException
@@ -53,16 +58,62 @@ async def access_control(request: Request, call_next):
     try:
         if url.startswith("/api"):
             # api 인 경우 헤더로 토큰 검사
-            if "authorization" in headers.keys():
-                token_info = await token_decode(access_token=headers.get("Authorization"))
-                request.state.user = UserToken(**token_info)
+            if url.startswith("/api/services"):
+                # api service에서 jwt 뿐만 아니라 secret key로 검사
+                qs = str(request.query_params)
+                qs_list = qs.split("&")
+
+                try:
+                    qs_dict = {qs_split.split("=")[0]: qs_split.split("=")[1] for qs_split in qs_list}
+                except Exception:
+                    raise ex.APIQueryStringEx()
+
+                qs_keys = qs_dict.keys()
+                if "key" not in qs_keys or "timestamp" not in qs_keys:
+                    raise ex.APIQueryStringEx()
+
+                if "secret" not in headers.keys():
+                    raise ex.APIHeaderInvalidEx()
+
+                session = next(db.session())
+                # session을 새로 받아서 get에 추가한 이유?
+                # sqlalchemy는 lazy하다. query를 할 때만 session을 연결
+                # get에 session을 추가로 넣지 않으면, get() 이후 session은 끊김
+                # 해당 함수에서 추가로 쿼리를 하기 위해 session을 유지시키기 위함
+
+                api_key = ApiKeys.get(session=session, access_key=qs_dict["key"])
+                if not api_key:
+                    raise ex.NotFoundAccessKeyEx(api_key=qs_dict["key"])
+
+                mac = hmac.new(bytes(api_key.secret_key, encoding="utf8"), bytes(qs, encoding="utf8"), digestmod="sha256")
+                d = mac.digest()
+                validating_secret = str(base64.b64encode(d).decode("utf-8"))
+                if headers["secret"] != validating_secret:
+                    raise ex.APIHeaderInvalidEx()
+
+                # 10초 이전의 생성한 요청까지만 인증함
+                # header의 secret_key를 계속해서 변경하도록 유도함
+                # Replay Attack을 막기위함
+                now_timestamp = int(D.datetime(diff=9).timestamp())
+                if now_timestamp - 10 > int(qs_dict["timestamp"]) or now_timestamp < int(qs_dict["timestamp"]):
+                    raise ex.APITimestampEx()
+
+                user_info = to_dict(api_key.users)
+                request.state.user = UserToken(**user_info)
+                session.close()
+                response = await call_next(request)
+                return response
+
             else:
-                if "Authorization" not in headers.keys():
-                    raise ex.NotAuthorized()
+                if "authorization" in headers.keys():
+                    token_info = await token_decode(access_token=headers.get("Authorization"))
+                    request.state.user = UserToken(**token_info)
+                else:
+                    if "Authorization" not in headers.keys():
+                        raise ex.NotAuthorized()
         else:
             # 템플릿 렌더링인 경우 cookies 토큰 검사
-            cookies["Authorization"] = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTEsImVtYWlsIjoia2prNjY0NkBuYXZlci5jb20iLCJuYW1lIjpudWxsLCJwaG9uZV9udW1iZXIiOm51bGwsInByb2ZpbGVfaW1nIjpudWxsLCJzbnNfdHlwZSI6bnVsbH0.DZYxrWuaaUIfRIPcYGfrwxMtKjRMl8vVtW754PRThGs"
-
+            # cookies["Authorization"] = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTEsImVtYWlsIjoia2prNjY0NkBuYXZlci5jb20iLCJuYW1lIjpudWxsLCJwaG9uZV9udW1iZXIiOm51bGwsInByb2ZpbGVfaW1nIjpudWxsLCJzbnNfdHlwZSI6bnVsbH0.DZYxrWuaaUIfRIPcYGfrwxMtKjRMl8vVtW754PRThGs"
             if "Authorization" not in cookies.keys():
                 raise ex.NotAuthorized()
 

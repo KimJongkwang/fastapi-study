@@ -1,6 +1,6 @@
 from sqlalchemy.schema import Column
 from sqlalchemy import ForeignKey, Integer, DateTime, func, Enum, String, Boolean
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, relationship
 from database.conn import db
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -49,7 +49,7 @@ class BaseMixin:
         return obj
 
     @classmethod
-    def get(cls, **kwagrs):
+    def get(cls, session: Session = None, **kwagrs):
         """
         Simply get a row
 
@@ -61,8 +61,10 @@ class BaseMixin:
         """
         # obj = cls()
         # get(select)은 commit이 필요 없기 때문에, 추가로 세션을 하나 더 받아온다. 이때 next를 사용하여 return 시 자동으로 세션이 종료되게끔 유도
-        session = next(db.session())  # 단, 트래픽이 얼마나 발생할지 여부에 따라 next()로 받는 것보다, parameter로 session을 받아 오는것이 좋을 수 있음
-        query = session.query(cls)
+        # 단, 트래픽이 얼마나 발생할지 여부에 따라 next()로 받는 것보다, parameter로 session을 받아 오는것이 좋을 수 있음
+        # 위의 주석 수정됨. 파라미터에서 session을 받고, 받지 않는다면 db.session 새로 생성
+        _session = next(db.session()) if not session else session
+        query = _session.query(cls)
         for key, val in kwagrs.items():
             col = getattr(cls, key)
             query = query.filter(col == val)  # filter 정의: 2개 이상 로우를 전달
@@ -70,7 +72,8 @@ class BaseMixin:
         if query.count() > 1:
             raise Exception("Only one row is supposed to be returned, but got more than one.")
         result = query.first()
-        session.close()
+        if not session:
+            _session.close()
         return result
 
     @classmethod
@@ -190,6 +193,7 @@ class Users(Base, BaseMixin):
     profile_img = Column(String(length=1000), nullable=True)
     sns_type = Column(Enum("FB", "G", "K"), nullable=True)
     marketing_agree = Column(Boolean, nullable=True, default=True)
+    keys = relationship("ApiKeys", back_populates="users")
 
     """DDL users
     CREATE TABLE users(
@@ -217,6 +221,8 @@ class ApiKeys(Base, BaseMixin):
     status = Column(Enum("active", "deleted", "blocked"), default="active")
     is_whitelisted = Column(Boolean, default=False)  # api 로 받아낼 수 있는 IP주소
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    whitelist = relationship("ApiWhiteLists", backref="api_keys")
+    users = relationship("Users", back_populates="keys")
     # 화이트리스트는 식별된 일부 실체들이 특정 권한, 서비스, 이동, 접근, 인식에 대해 명시적으로 허가하는 목록이며, 이에 대한 과정은 화이트리스팅이라고 한다
 
     """

@@ -69,10 +69,12 @@ class AddApiKey(BaseModel):
     class Config:
         orm_mode = True
 
+
 class GetApiKeyList(AddApiKey):
     id: int = None
     access_key: str = None
     created_at: datetime = None
+
 
 class GetApiKeys(GetApiKeyList):
     secret_key: str = None

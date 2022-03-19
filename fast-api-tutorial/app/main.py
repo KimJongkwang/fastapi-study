@@ -1,5 +1,6 @@
 # base
 from dataclasses import asdict
+from sys import prefix
 
 # fastapi
 import uvicorn
@@ -14,7 +15,7 @@ from middlewares.trusted_hosts import AddExceptPathTHM
 # from middlewares.trusted_hosts import TrustedHostMiddleware  # AddExceptPathTHM로 재정의
 
 # routes
-from routes import index, auth, users
+from routes import index, auth, users, services
 
 # configuration
 from database.conn import db
@@ -28,12 +29,12 @@ def create_app():
     """
     앱 함수 실행
     """
-    c = conf()
     app = FastAPI()
-    conf_dict = asdict(c)
-    db.init_app(app, **conf_dict)
 
     # 데이터 베이스 이니셜라이즈
+    c = conf()
+    conf_dict = asdict(c)
+    db.init_app(app, **conf_dict)
 
     # 레디스 이니셜라이즈
 
@@ -54,12 +55,13 @@ def create_app():
     )
     # except_path = AWS Load balancer에서 health check(모니터링)을 위해 /health url 검사 제외
     # 기존의 starlette의 trustedhostmiddleware는 except path가 없어 새로 정의함
-    app.add_middleware(AddExceptPathTHM, allowed_hosts=conf().TRUSTED_HOSTS, except_path=["/health"])
+    app.add_middleware(AddExceptPathTHM, allowed_hosts=conf().TRUSTED_HOSTS, except_path=["/health", "*"])
 
     # 라우터 정의
-    app.include_router(index.router)
+    app.include_router(index.router, tags=["Root"])
     app.include_router(auth.router, tags=["Authentication"], prefix="/api")
     app.include_router(users.router, tags=["Users"], prefix="/api", dependencies=[Depends(API_KEY_HEADER)])  # router 추가시 dependencies로 토큰 검사 필요시 apikey header에 의존성 주입
+    app.include_router(services.router, tags=["Services"], prefix="/api")
     return app
 
 

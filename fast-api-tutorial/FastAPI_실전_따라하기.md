@@ -266,3 +266,32 @@ True # if True, is expired
   ```python
   raise ex.MaxKeyCountEx()
   ```
+
+### 12장 FastAPI 미들웨어에서 Secret Key로 API 사용자 인증하기
+
+- token_validator.py
+
+  - JWT가 아닌 secret_key를 통해 사용자 인증 로직 구현
+  - api 서버가 되어보는 단계
+  - 추후 서비스단계에서 UI로 제공하는 서버가 아닌 백엔드 <-> 백엔드 서버간 통신을 통해 데이터를 제공하는 api 서버로의 발전 계획
+  - 본래 Rest는 상태가 없기 때문에 현재 JWT, secret_key, access_key로 인증이 가능
+  - api_keys 테이블에서 access_key에 index 설정해준 이유는 db쿼리를 미리 예상하고 인덱스로 검색을 빠르게 하기 위함
+  - 실제 프로덕션레벨은 추후에는 db외로 redis로 변경하여 사용
+
+  - 또한, 미들웨어에서 session을 새로 가져와 쿼리하는 것은 좋지 않음.
+
+    - 서버를 느리게할 수 있다. 병목현상의 주요 원인
+    - 프로덕션 레벨까지 올라간다면, 반드시 redis를 사용하거나 man cached? hash storage? 를 사용하는 것을 추천
+
+  - hmac: python으로 api 생성하는 플랫폼에서 대부분 사용함. 사용빈도가 높다.
+
+    - 사용의 기본 개념: query string(key, timestamp)를 해싱함
+    - 이후 base64로 변경하여 사용하기 위함
+
+  - header timestamp: 유효검사.
+
+    - Replay attack을 방지하기 위함. 추후에 알아볼것.
+
+  - sqlalchemy.orm relationship이 무엇인지 알아보자.
+    - 컬럼으로 relationship 추가
+    - 실제 디비스키마는 추가되지 않지만, foreignkey처럼 사용할 수 있어보인다. 또는 join이 된다.

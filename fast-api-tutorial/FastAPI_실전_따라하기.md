@@ -295,3 +295,24 @@ True # if True, is expired
   - sqlalchemy.orm relationship이 무엇인지 알아보자.
     - 컬럼으로 relationship 추가
     - 실제 디비스키마는 추가되지 않지만, foreignkey처럼 사용할 수 있어보인다. 또는 join이 된다.
+
+### 13장 FastAPI 나에게 카카오톡 보내기, 풀코스 튜토리얼 Python
+
+- SOLAPI
+- docker mail 서버 구축할 예정(대신 aws ses)
+  - AWS ses: e-mail 서비스
+  - 한달의 6만건 무료
+  - EC2에 호스팅이 되어있다면, free tier 사용시 만료일이 없음
+- 디버깅을 위한 token_validator.py, config.py, main.py 수정
+
+  - config.py 로컬환경에서 DEBUG 변수 True
+  - main.py DEBUG True 일때, api headers 디펜던시 추가
+  - token_validator.py 디버깅을 위한 DEBUG 검사에 따라 테스트
+  - 오직 로컬환경에서만 작성필요
+  - dev, prod 단계에서는 삭제. 사용자 정보 노출
+  - 사용자 access_key 로 로그인
+
+- 카카오 메시지 api
+
+  - 하루 8시간 이후 만료
+  - 버튼 보내기가 안되는데, 이유를 모르겠음.

@@ -2,6 +2,7 @@
 # 추후 예외가 수 백개 이상 많아지게 되면, 데이터베이스에서 관리
 # 예외를 백엔드에서 관리하는 것이 프론트엔드에서 UX차원에서 좋을 것 같다?
 
+import sqlalchemy
 from common.consts import MAX_API_KEY, MAX_API_WHITELIST
 
 
@@ -44,6 +45,9 @@ class APIException(Exception):
         기존 APIException 만 처리 --> Exception을 받아 APIException으로 변환
         또는 Exception 반환
         """
+        print(error)
+        if isinstance(error, sqlalchemy.exc.OperationalError):
+            error = SqlFailureEx(ex=error)
         if not isinstance(error, APIException):
             error = APIException(ex=error, detail=str(error))
         return error
@@ -188,5 +192,27 @@ class KakaoSendFailureEx(APIException):
             msg="카카오톡 전송에 실패했습니다.",
             detail="Failed to send KAKAO MSG.",
             code=f"{StatusCode.HTTP_400}{'11'.zfill(4)}",
+            ex=ex,
+        )
+
+
+class SqlFailureEx(APIException):
+    def __init__(self, ex: Exception = None):
+        super().__init__(
+            status_code=StatusCode.HTTP_500,
+            msg="이 에러는 서버측 에러 입니다. 자동으로 리포팅 되며, 빠르게 수정하겠습니다.",
+            detail="Internal Server Error",
+            code=f"{StatusCode.HTTP_500}{'2'.zfill(4)}",
+            ex=ex,
+        )
+
+
+class OverCharLongEx(APIException):
+    def __init__(self, ex: Exception = None):
+        super().__init__(
+            status_code=StatusCode.HTTP_400,
+            msg="200자를 초과하는 메시지는 지원하지 않습니다.",
+            detail="Characters with more than 200 are not supported",
+            code=f"{StatusCode.HTTP_400}{'2'.zfill(4)}",
             ex=ex,
         )

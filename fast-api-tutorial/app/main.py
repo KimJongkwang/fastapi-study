@@ -61,7 +61,10 @@ def create_app():
     app.include_router(index.router, tags=["Root"])
     app.include_router(auth.router, tags=["Authentication"], prefix="/api")
     app.include_router(users.router, tags=["Users"], prefix="/api", dependencies=[Depends(API_KEY_HEADER)])  # router 추가시 dependencies로 토큰 검사 필요시 apikey header에 의존성 주입
-    app.include_router(services.router, tags=["Services"], prefix="/api")
+    if conf().DEBUG:
+        app.include_router(services.router, tags=["Services"], prefix="/api", dependencies=[Depends(API_KEY_HEADER)])
+    else:
+        app.include_router(services.router, tags=["Services"], prefix="/api")
     return app
 
 

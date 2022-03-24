@@ -13,8 +13,9 @@ from common.consts import (
     EXCEPT_PATH_REGEX, EXCEPT_PATH_LIST,
     JWT_SECRET, JWT_ALGORITHM
 )
+from common.config import conf
 from database.conn import db
-from database.schema import ApiKeys
+from database.schema import ApiKeys, Users
 from models import UserToken
 from utils.date_utils import D
 from utils.query_utils import to_dict
@@ -62,44 +63,59 @@ async def access_control(request: Request, call_next):
                 # api service에서 jwt 뿐만 아니라 secret key로 검사
                 qs = str(request.query_params)
                 qs_list = qs.split("&")
-
-                try:
-                    qs_dict = {qs_split.split("=")[0]: qs_split.split("=")[1] for qs_split in qs_list}
-                except Exception:
-                    raise ex.APIQueryStringEx()
-
-                qs_keys = qs_dict.keys()
-                if "key" not in qs_keys or "timestamp" not in qs_keys:
-                    raise ex.APIQueryStringEx()
-
-                if "secret" not in headers.keys():
-                    raise ex.APIHeaderInvalidEx()
-
                 session = next(db.session())
                 # session을 새로 받아서 get에 추가한 이유?
                 # sqlalchemy는 lazy하다. query를 할 때만 session을 연결
                 # get에 session을 추가로 넣지 않으면, get() 이후 session은 끊김
                 # 해당 함수에서 추가로 쿼리를 하기 위해 session을 유지시키기 위함
 
-                api_key = ApiKeys.get(session=session, access_key=qs_dict["key"])
-                if not api_key:
-                    raise ex.NotFoundAccessKeyEx(api_key=qs_dict["key"])
+                if not conf().DEBUG:
+                    try:
+                        qs_dict = {qs_split.split("=")[0]: qs_split.split("=")[1] for qs_split in qs_list}
+                    except Exception:
+                        raise ex.APIQueryStringEx()
 
-                mac = hmac.new(bytes(api_key.secret_key, encoding="utf8"), bytes(qs, encoding="utf8"), digestmod="sha256")
-                d = mac.digest()
-                validating_secret = str(base64.b64encode(d).decode("utf-8"))
-                if headers["secret"] != validating_secret:
-                    raise ex.APIHeaderInvalidEx()
+                    qs_keys = qs_dict.keys()
 
-                # 10초 이전의 생성한 요청까지만 인증함
-                # header의 secret_key를 계속해서 변경하도록 유도함
-                # Replay Attack을 막기위함
-                now_timestamp = int(D.datetime(diff=9).timestamp())
-                if now_timestamp - 10 > int(qs_dict["timestamp"]) or now_timestamp < int(qs_dict["timestamp"]):
-                    raise ex.APITimestampEx()
+                    if "key" not in qs_keys or "timestamp" not in qs_keys:
+                        raise ex.APIQueryStringEx()
 
-                user_info = to_dict(api_key.users)
-                request.state.user = UserToken(**user_info)
+                    if "secret" not in headers.keys():
+                        raise ex.APIHeaderInvalidEx()
+
+                    api_key = ApiKeys.get(session=session, access_key=qs_dict["key"])
+
+                    if not api_key:
+                        raise ex.NotFoundAccessKeyEx(api_key=qs_dict["key"])
+
+                    mac = hmac.new(bytes(api_key.secret_key, encoding="utf8"), bytes(qs, encoding="utf8"), digestmod="sha256")
+                    d = mac.digest()
+                    validating_secret = str(base64.b64encode(d).decode("utf-8"))
+                    if headers["secret"] != validating_secret:
+                        raise ex.APIHeaderInvalidEx()
+
+                    # 10초 이전의 생성한 요청까지만 인증함
+                    # header의 secret_key를 계속해서 변경하도록 유도함
+                    # Replay Attack을 막기위함
+                    now_timestamp = int(D.datetime(diff=9).timestamp())
+                    if now_timestamp - 10 > int(qs_dict["timestamp"]) or now_timestamp < int(qs_dict["timestamp"]):
+                        raise ex.APITimestampEx()
+
+                    user_info = to_dict(api_key.users)
+                    # 로컬에서 else를 탈 경우 user 정보가 없기 때문에, 추가
+                    request.state.user = UserToken(**user_info)
+
+                else:
+                    # Request User 가 필요
+                    if "authorization" in headers.keys():
+                        key = headers.get("Authorization")
+                        api_key_obj = ApiKeys.get(session=session, access_key=key)
+                        user_info = to_dict(Users.get(session=session, id=api_key_obj.user_id))
+                        request.state.user = UserToken(**user_info)
+                        # 토큰 없음
+                    else:
+                        if "Authorization" not in headers.keys():
+                            raise ex.NotAuthorized()
                 session.close()
                 response = await call_next(request)
                 return response

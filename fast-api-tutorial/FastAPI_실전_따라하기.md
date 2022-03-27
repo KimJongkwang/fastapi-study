@@ -316,3 +316,32 @@ True # if True, is expired
 
   - 하루 8시간 이후 만료
   - 버튼 보내기가 안되는데, 이유를 모르겠음.
+
+### 14장 Gmail을 이용한 메일 전송(ft. 백그라운드 태스크)
+
+- yagmail(yet again gmail)
+
+  - 지메일로 메일을 보내는 방법이다.
+  - 단, 지메일에 2단계 인증이 있다면, 해제를 해주어야 한다.
+  - 2단계 인증해주더라도 보안상 시스템에서 지메일 접근이 안되는 경우가 있음
+  - > https://myaccount.google.com/u/1/lesssecureapps 여기에서 보안 수준이 낮은 앱의 액세스 허용을 켜주어야함
+
+- Background Task
+  - django의 celery
+  - fastapi는 fastapi.background의 BackgroundTasks가 있음.
+  - 사용은 간단하다. background로 실행할 함수로 정의하고, BackgroundTasks에서 add_task()로 추가하면 된다.
+
+```python
+def write_notification(email: str, message=""):
+   with open("log.txt", mode="w") as email_file:
+       content = f"notification for {email}: {message}"
+       email_file.write(content)
+
+
+@app.post("/send-notification/{email}")
+async def send_notification(email: str, background_tasks: BackgroundTasks):
+   background_tasks.add_task(write_notification, email, message="some notification")
+   return {"message": "Notification sent in the background"}
+```
+
+> https://fastapi.tiangolo.com/tutorial/background-tasks/

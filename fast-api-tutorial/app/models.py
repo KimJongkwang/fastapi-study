@@ -104,5 +104,3 @@ class EmailRecipients(BaseModel):
 
 class SendEmail(BaseModel):
     email_to: List[EmailRecipients] = None
-
-

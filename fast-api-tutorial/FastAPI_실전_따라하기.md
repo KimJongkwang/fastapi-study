@@ -345,3 +345,9 @@ async def send_notification(email: str, background_tasks: BackgroundTasks):
 ```
 
 > https://fastapi.tiangolo.com/tutorial/background-tasks/
+
+### 15장 AWS SES로 FastAPI에서 이메일 발송하기
+
+- 아마존 aws ses로 이메일 서버 구축
+- aws route 53이나 ec2 서버가 있다면, 매달 3만건의 메일전송 무료
+- 추후 해볼일이 있다면 쓰자. 현재는 엔드포인트 구성 및 테스트만 진행

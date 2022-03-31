@@ -68,7 +68,6 @@ email_content = """
 
 @router.post("email/send_by_gmail")
 async def email_by_gmail(request: Request, mailing_list: SendEmail):
-    t = time()
     send_email(mailing_list=mailing_list.email_to)
     return MessageOk()
 
@@ -79,7 +78,6 @@ async def email_by_gmail(request: Request, mailing_list: SendEmail):
 
 @router.post("email/send_by_gmail_on_bg")
 async def send_by_gmail_on_bg(request: Request, mailing_list: SendEmail, background_tasks: BackgroundTasks):
-    t = time()
     background_tasks.add_task(
         send_email, mailing_list=mailing_list.email_to
     )
@@ -111,7 +109,7 @@ def send_email(**kwargs):
 async def email_by_ses():
     sender = "Jk =?UTF-8?B?65287J207Ja4?= <sender@d9.is>"
     recipient = ["kjk6646@gmail.com"]
-        # If necessary, replace us-west-2 with the AWS Region you're using for Amazon SES.
+    # If necessary, replace us-west-2 with the AWS Region you're using for Amazon SES.
     region = "ap-northeast-2"
 
     # The subject line for the email.

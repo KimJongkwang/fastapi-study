@@ -30,7 +30,15 @@ class ProdConfig(Config):
     ALLOW_SITE = ["*"]
 
 
+@dataclass
+class TestConfig(Config):
+    DB_URL: str = "mysql+pymysql://'travis':0000@localhost/notification_api_test?charset=utf8mb4"
+    TRUSTED_HOSTS = ["*"]
+    ALLOW_SITE = ["*"]
+    TEST_MODE: bool = True
+
+
 def conf():
     """환경에 따라 fastapi reload 설정 및 환경 불러오기"""
-    config = dict(prod=ProdConfig(), local=LocalConfig())
-    return config.get(environ.get("API_ENV", "local"))
+    config = dict(prod=ProdConfig, local=LocalConfig, test=TestConfig)
+    return config[environ.get("API_ENV", "local")]()

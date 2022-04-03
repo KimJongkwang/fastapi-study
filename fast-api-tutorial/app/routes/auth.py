@@ -41,7 +41,7 @@ async def register(sns_type: SnsType, reg_info: UserRegister, session: Session =
             # 추후에는 미들웨어에서 400에러를 처리하도록 수정
             return JSONResponse(status_code=400, content=dict(msg="Email and PW must be provided"))
         if is_exist:
-            return JSONResponse(status_code=400, content=dict(msg="Email exists"))
+            return JSONResponse(status_code=400, content=dict(msg="EMAIL_EXISTS"))
         hash_pw = bcrypt.hashpw(reg_info.pw.encode("utf-8"), bcrypt.gensalt())  # bcrypt: hash 함수 pw를 hash로 변환 및 검증하기 위해 사용
         new_user = Users.create(session, auto_commit=True, pw=hash_pw, email=reg_info.email)
         # 토큰 생성, 패스워드와 마케팅동의는 토큰생성에 제외

@@ -1,6 +1,11 @@
+from pathlib import Path
 from datetime import datetime
+from aiohttp import request
+
 
 from fastapi import APIRouter, Response, Request
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 from inspect import currentframe as frame
 
 # Depends: FastAPI 내장 의존성 주입 메서드
@@ -16,11 +21,15 @@ from inspect import currentframe as frame
 #     Bash 스크립트로 FastAPI를 다시 시작하는 방법,
 #     FastAPI : 들어오는 요청을 일괄 처리하는 방법
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 router = APIRouter()
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+print(templates)
 
 # async def index(session: Session = Depends(db.session), ):
-@router.get("/")
-async def index():
+@router.get("/", response_class=HTMLResponse)
+async def index(request: Request):
     """
     ELB 상태 체크 API
     """
@@ -34,7 +43,8 @@ async def index():
     # Users().create(session, auto_commit=True, name="김종광2")
 
     current_time = datetime.utcnow()
-    return Response(f"Notification API (UTC: {current_time.strftime('%Y.%m.%d %H:%M:%S')})")
+
+    return templates.TemplateResponse("./index.html", context=dict(request=request, item=f"Notification API (UTC: {current_time.strftime('%Y.%m.%d %H:%M:%S')})"))
 
 
 @router.get("/test")

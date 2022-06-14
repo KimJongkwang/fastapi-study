@@ -1,5 +1,13 @@
 # secrets.json
 settings.json
+DemoWeb*
+Dingrrr-clone
+*copy.py
+.vscode
+*.jpg
+*.gitignore*
+*.ipynb
+_config.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -129,3 +137,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+
+
+
+*.test
